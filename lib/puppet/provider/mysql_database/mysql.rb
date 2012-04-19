@@ -7,6 +7,19 @@ Puppet::Type.type(:mysql_database).provide(:mysql,
 	commands :mysqladmin => '/usr/bin/mysqladmin'
 	commands :mysql => '/usr/bin/mysql'
 
+    # retrieve the current set of mysql databases
+    def self.instances
+        dbs = []
+
+        cmd = "#{command(:mysql)} -NBe 'show databases'"
+        execpipe(cmd) do |process|
+            process.each do |line|
+                dbs << new( { :ensure => :present, :name => line.chomp } )
+            end
+        end
+        return dbs
+    end
+
 	def munge_args(*args)
 		@resource[:defaults] ||= ""
 		if @resource[:defaults] != "" 

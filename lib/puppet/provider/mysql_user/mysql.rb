@@ -8,6 +8,18 @@ Puppet::Type.type(:mysql_user).provide(:mysql,
 	commands :mysql => '/usr/bin/mysql'
 	commands :mysqladmin => '/usr/bin/mysqladmin'
 
+    def self.instances
+        users = []
+
+        cmd = "#{command(:mysql)} mysql -NBe 'select concat(user, \"@\", host), password from user'"
+        execpipe(cmd) do |process|
+            process.each do |line|
+                users << new( query_line_to_hash(line) )
+            end
+        end
+        return users
+    end
+
 	def self.query_line_to_hash(line)
 		fields = line.chomp.split(/\t/)
 		{
